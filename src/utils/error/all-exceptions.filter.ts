@@ -29,27 +29,28 @@ export class AllExceptionsFilter implements ExceptionFilter {
     if (exception instanceof HttpException) {
       const status = exception.getStatus();
       const exceptionResponse = exception.getResponse();
-      
+
       this.logger.error(
         `HTTP Exception: ${status}`,
-        typeof exceptionResponse === 'string' 
-          ? exceptionResponse 
+        typeof exceptionResponse === 'string'
+          ? exceptionResponse
           : JSON.stringify(exceptionResponse),
       );
 
       return response.status(status).json({
         code: 'HTTP_ERROR',
         status,
-        message: typeof exceptionResponse === 'string' 
-          ? exceptionResponse 
-          : (exceptionResponse as any).message || exception.message,
+        message:
+          typeof exceptionResponse === 'string'
+            ? exceptionResponse
+            : (exceptionResponse as any).message || exception.message,
       });
     }
 
     // Handle database errors (like constraint violations)
     if (exception && typeof exception === 'object' && 'code' in exception) {
       const dbError = exception as any;
-      
+
       // PostgreSQL unique constraint violation
       if (dbError.code === '23505') {
         this.logger.warn(`Database constraint violation: ${dbError.message}`);
@@ -78,10 +79,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
     return response.status(status).json({
       code: 'INTERNAL_SERVER_ERROR',
       status,
-      message: exception instanceof Error 
-        ? exception.message 
-        : 'An unexpected error occurred',
+      message:
+        exception instanceof Error
+          ? exception.message
+          : 'An unexpected error occurred',
     });
   }
 }
-
