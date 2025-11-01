@@ -18,8 +18,9 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "db:migrate": "ts-node -r tsconfig-paths/register scripts/migrate.ts",
-    "db:revert:last": "ts-node -r tsconfig-paths/register scripts/revert.ts"
+    "db:sync": "dotenv -e .env.local -- ts-node ./node_modules/typeorm/cli migration:run -d src/config/typeorm.ts",
+    "db:migrate:revert": "dotenv -e .env.local -- ts-node ./node_modules/typeorm/cli migration:revert -d src/config/typeorm.ts",
+    "db:migrate:generate": "bash scripts/generate-migration.sh"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
@@ -54,7 +55,8 @@
     "ts-loader": "^9.4.3",
     "ts-node": "^10.9.1",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.1.3"
+    "typescript": "^5.1.3",
+    "dotenv-cli": "^7.4.2"
   },
   "jest": {
     "moduleFileExtensions": [
