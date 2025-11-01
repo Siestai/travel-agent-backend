@@ -1,7 +1,9 @@
-import { Injectable, Logger } from "@nestjs/common";
-import { Repository } from "typeorm";
-import { UserEntity } from "./entity/user.entity";
-import { CreateUserDto } from "./dto/create-user.dto";
+import { Injectable, Logger } from '@nestjs/common';
+import { Repository } from 'typeorm';
+import { UserEntity } from './entity/user.entity';
+import { CreateUserDto } from './dto/create-user.dto';
+import { AppError } from 'src/utils/error/app-error';
+import { AppErrorCodes, AppErrorType } from 'src/common/error-codes';
 
 @Injectable()
 export class UserService {
@@ -10,6 +12,25 @@ export class UserService {
 
   async create(createUserDto: CreateUserDto) {
     this.logger.debug(`Creating user ${createUserDto.email}`);
-    return this.userRepository.save(createUserDto);
+    const user = new UserEntity();
+    user.email = createUserDto.email;
+    const savedUser = await this.userRepository.save(user);
+    this.logger.log(`User created ${user.email}`);
+    return savedUser;
+  }
+
+  async findByEmail(email: string) {
+    try {
+      const foundUser = await this.userRepository.findOne({ where: { email } });
+
+      if (!foundUser) return null;
+
+      return foundUser;
+    } catch (error) {
+      throw new AppError({
+        message: 'Failed to find user by email',
+        ...AppErrorType[AppErrorCodes.INTERNAL_SERVER_ERROR],
+      });
+    }
   }
 }
