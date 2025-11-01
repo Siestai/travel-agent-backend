@@ -7,6 +7,14 @@ export class CreateDocumentDto {
 
   @IsString()
   @IsNotEmpty()
+  travel_id: string;
+
+  @IsString()
+  @IsNotEmpty()
+  file_id: string;
+
+  @IsString()
+  @IsNotEmpty()
   name: string;
 
   @IsString()

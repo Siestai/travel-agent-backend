@@ -3,9 +3,13 @@ import {
   CreateDateColumn,
   Entity,
   Index,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { TravelEntity } from '../../travel/entity/travel.entity';
+import { DocumentType } from '../type/document.type';
 
 @Entity('document')
 @Index(['IDX_UserId_TravelId', 'user_id', 'travel_id'])
@@ -17,8 +21,11 @@ export class DocumentEntity {
   @Index()
   user_id: string;
 
-  @Column()
-  travel_id: string;
+  @ManyToOne(() => TravelEntity, (travel) => travel.documents, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'travel_id' })
+  travel: TravelEntity;
 
   @Column()
   file_id: string;
