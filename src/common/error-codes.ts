@@ -2,6 +2,7 @@ export enum AppErrorCodes {
   INTERNAL_SERVER_ERROR = 'INTERNAL_SERVER_ERROR',
   NOT_FOUND = 'NOT_FOUND',
   BAD_REQUEST = 'BAD_REQUEST',
+  UNAUTHORIZED = 'UNAUTHORIZED',
 }
 
 export const AppErrorType: Record<string, { code: string; status: number }> = {
@@ -16,5 +17,9 @@ export const AppErrorType: Record<string, { code: string; status: number }> = {
   [AppErrorCodes.BAD_REQUEST]: {
     code: AppErrorCodes.BAD_REQUEST,
     status: 400,
+  },
+  [AppErrorCodes.UNAUTHORIZED]: {
+    code: AppErrorCodes.UNAUTHORIZED,
+    status: 401,
   },
 };
