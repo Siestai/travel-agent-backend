@@ -13,7 +13,7 @@ export class TravelDto {
     dto.updated = entity.updated;
 
     // Include documents if loaded
-    if (entity.documents.length) {
+    if (entity?.documents?.length > 0) {
       dto.documents = entity.documents.map((doc) => ({
         id: doc.id,
         name: doc.name,
