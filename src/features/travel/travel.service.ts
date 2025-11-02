@@ -52,10 +52,50 @@ export class TravelService {
     return !existingTravel;
   }
 
-  async createTravelFolder(
-    email: string,
-    travelName: string,
-  ): Promise<string> {
+  async findAllByUserId(userId: string) {
+    try {
+      const travels = await this.travelRepository.find({
+        where: { user_id: userId },
+        order: { created: 'DESC' },
+      });
+      return travels;
+    } catch (error) {
+      this.logger.error(`Failed to find travels for user ${userId}:`, error);
+      throw new AppError({
+        message: 'Failed to fetch travels',
+        ...AppErrorType[AppErrorCodes.INTERNAL_SERVER_ERROR],
+      });
+    }
+  }
+
+  async findOne(id: string) {
+    try {
+      const travel = await this.travelRepository.findOne({
+        where: { id },
+        relations: ['documents'],
+      });
+
+      if (!travel) {
+        throw new AppError({
+          message: 'Travel not found',
+          ...AppErrorType[AppErrorCodes.NOT_FOUND],
+        });
+      }
+
+      return travel;
+    } catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+      this.logger.error(`Failed to find travel ${id}:`, error);
+      throw new AppError({
+        message: 'Failed to fetch travel',
+        ...AppErrorType[AppErrorCodes.INTERNAL_SERVER_ERROR],
+      });
+    }
+  }
+
+  async createTravelFolder(email: string, travelName: string): Promise<string> {
     try {
       // Get user with Drive credentials
       const user = await this.userService.findByEmail(email);
@@ -123,7 +163,8 @@ export class TravelService {
         // Handle token expiration
         if (errorData.error?.code === 401 || folderResponse.status === 401) {
           throw new AppError({
-            message: 'Drive access token expired. Please reconnect Google Drive',
+            message:
+              'Drive access token expired. Please reconnect Google Drive',
             ...AppErrorType[AppErrorCodes.UNAUTHORIZED],
           });
         }
@@ -152,9 +193,7 @@ export class TravelService {
         });
       }
 
-      this.logger.log(
-        `Travel folder created: ${folderId} (${travelName})`,
-      );
+      this.logger.log(`Travel folder created: ${folderId} (${travelName})`);
 
       return folderId;
     } catch (error) {
