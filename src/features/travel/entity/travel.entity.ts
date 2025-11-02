@@ -30,10 +30,13 @@ export class TravelEntity {
   documents: DocumentEntity[];
 
   @Column({ nullable: true })
-  start_date: Date;
+  drive_folder_id?: string;
 
   @Column({ nullable: true })
-  end_date: Date;
+  start_date?: Date;
+
+  @Column({ nullable: true })
+  end_date?: Date;
 
   @CreateDateColumn()
   created: Date;

@@ -31,10 +31,13 @@ export class UserEntity {
   drive_connected: boolean;
 
   @Column({ nullable: true })
-  drive_access_token: string | null;
+  drive_access_token?: string;
 
   @Column({ nullable: true })
-  drive_refresh_token: string | null;
+  drive_refresh_token?: string;
+
+  @Column({ nullable: true })
+  drive_root_folder_id?: string;
 
   @CreateDateColumn()
   created: Date;

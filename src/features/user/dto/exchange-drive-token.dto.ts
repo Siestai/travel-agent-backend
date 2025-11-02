@@ -9,4 +9,3 @@ export class ExchangeDriveTokenDto {
   @IsNotEmpty()
   state: string;
 }
-

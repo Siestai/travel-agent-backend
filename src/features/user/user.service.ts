@@ -61,8 +61,228 @@ export class UserService {
     }
   }
 
+  /**
+   * Searches for "Siestai Travel" folder in user's Google Drive
+   * Returns folder ID if found, null otherwise
+   */
+  async findSiestaiTravelFolder(accessToken: string): Promise<string | null> {
+    try {
+      this.logger.debug('Searching for Siestai Travel folder');
+
+      // Search for folder with name "Siestai Travel" and folder mime type
+      const searchUrl =
+        'https://www.googleapis.com/drive/v3/files?' +
+        new URLSearchParams({
+          q: "name='Siestai Travel' and mimeType='application/vnd.google-apps.folder' and trashed=false",
+          fields: 'files(id, name)',
+        });
+
+      this.logger.debug(`Search URL: ${searchUrl}`);
+
+      const searchResponse = await fetch(searchUrl, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      const responseText = await searchResponse.text();
+      this.logger.debug(`Search response status: ${searchResponse.status}`);
+      this.logger.debug(`Search response: ${responseText}`);
+
+      if (!searchResponse.ok) {
+        let errorData;
+        try {
+          errorData = JSON.parse(responseText);
+        } catch {
+          errorData = { message: responseText };
+        }
+
+        this.logger.error(
+          'Failed to search for Siestai Travel folder:',
+          JSON.stringify(errorData, null, 2),
+        );
+        throw new AppError({
+          message:
+            errorData.error?.message ||
+            errorData.message ||
+            'Failed to search Drive folder',
+          ...AppErrorType[AppErrorCodes.INTERNAL_SERVER_ERROR],
+        });
+      }
+
+      const searchData = JSON.parse(responseText);
+      const folders = searchData.files || [];
+
+      this.logger.debug(`Found ${folders.length} matching folders`);
+
+      // Return the first matching folder ID, or null if not found
+      if (folders.length > 0) {
+        this.logger.log(
+          `Found existing Siestai Travel folder: ${folders[0].id}`,
+        );
+        return folders[0].id;
+      }
+
+      this.logger.debug('Siestai Travel folder not found');
+      return null;
+    } catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+      this.logger.error('Failed to find Siestai Travel folder:', error);
+      throw new AppError({
+        message: 'Failed to search for Drive folder',
+        ...AppErrorType[AppErrorCodes.INTERNAL_SERVER_ERROR],
+      });
+    }
+  }
+
+  /**
+   * Creates "Siestai Travel" folder in user's Google Drive
+   * Returns the folder ID
+   */
+  async createSiestaiTravelFolder(accessToken: string): Promise<string> {
+    try {
+      this.logger.debug('Creating Siestai Travel folder with access token');
+
+      const folderResponse = await fetch(
+        'https://www.googleapis.com/drive/v3/files',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: 'Siestai Travel',
+            mimeType: 'application/vnd.google-apps.folder',
+          }),
+        },
+      );
+
+      const responseText = await folderResponse.text();
+      this.logger.debug(
+        `Folder creation response status: ${folderResponse.status}`,
+      );
+      this.logger.debug(`Folder creation response: ${responseText}`);
+
+      if (!folderResponse.ok) {
+        let errorData;
+        try {
+          errorData = JSON.parse(responseText);
+        } catch {
+          errorData = { message: responseText };
+        }
+
+        this.logger.error(
+          'Failed to create Siestai Travel folder:',
+          JSON.stringify(errorData, null, 2),
+        );
+        throw new AppError({
+          message:
+            errorData.error?.message ||
+            errorData.message ||
+            'Failed to create Drive folder',
+          ...AppErrorType[AppErrorCodes.INTERNAL_SERVER_ERROR],
+        });
+      }
+
+      const folderData = JSON.parse(responseText);
+      const folderId = folderData.id;
+
+      if (!folderId) {
+        this.logger.error('Folder ID not found in response:', folderData);
+        throw new AppError({
+          message: 'Folder ID not received from Google Drive',
+          ...AppErrorType[AppErrorCodes.INTERNAL_SERVER_ERROR],
+        });
+      }
+
+      // Verify the folder was actually created by fetching it
+      const verifyResponse = await fetch(
+        `https://www.googleapis.com/drive/v3/files/${folderId}?fields=id,name,mimeType`,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        },
+      );
+
+      if (!verifyResponse.ok) {
+        const verifyError = await verifyResponse.json();
+        this.logger.error('Failed to verify created folder:', verifyError);
+        throw new AppError({
+          message: 'Folder created but verification failed',
+          ...AppErrorType[AppErrorCodes.INTERNAL_SERVER_ERROR],
+        });
+      }
+
+      const verifiedFolder = await verifyResponse.json();
+      this.logger.log(
+        `Siestai Travel folder created and verified: ${folderId} (${verifiedFolder.name})`,
+      );
+
+      return folderId;
+    } catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+      this.logger.error('Failed to create Siestai Travel folder:', error);
+      throw new AppError({
+        message: 'Failed to create Drive folder',
+        ...AppErrorType[AppErrorCodes.INTERNAL_SERVER_ERROR],
+      });
+    }
+  }
+
+  /**
+   * Ensures "Siestai Travel" folder exists in user's Drive
+   * Checks first, creates if not found, returns folder ID
+   */
+  async ensureSiestaiTravelFolderExists(
+    accessToken: string,
+    email: string,
+  ): Promise<string> {
+    try {
+      // First, try to find existing folder
+      let folderId = await this.findSiestaiTravelFolder(accessToken);
+
+      if (folderId) {
+        this.logger.log(
+          `Siestai Travel folder found for user ${email}: ${folderId}`,
+        );
+        return folderId;
+      }
+
+      // Folder doesn't exist, create it
+      this.logger.log(`Creating Siestai Travel folder for user ${email}`);
+      folderId = await this.createSiestaiTravelFolder(accessToken);
+      this.logger.log(
+        `Siestai Travel folder created for user ${email}: ${folderId}`,
+      );
+
+      return folderId;
+    } catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+      this.logger.error(
+        `Failed to ensure Siestai Travel folder exists for ${email}:`,
+        error,
+      );
+      throw new AppError({
+        message: 'Failed to ensure Drive folder exists',
+        ...AppErrorType[AppErrorCodes.INTERNAL_SERVER_ERROR],
+      });
+    }
+  }
+
   async connectDrive(email: string, accessToken: string, refreshToken: string) {
     try {
+      this.logger.log(`Starting Google Drive connection for user ${email}`);
+
       const user = await this.findByEmail(email);
       if (!user) {
         throw new AppError({
@@ -71,15 +291,48 @@ export class UserService {
         });
       }
 
+      // Ensure "Siestai Travel" folder exists in user's Drive
+      this.logger.log(
+        `Ensuring Siestai Travel folder exists for user ${email}`,
+      );
+      const folderId = await this.ensureSiestaiTravelFolderExists(
+        accessToken,
+        email,
+      );
+
+      if (!folderId) {
+        throw new AppError({
+          message: 'Failed to get folder ID after ensuring folder exists',
+          ...AppErrorType[AppErrorCodes.INTERNAL_SERVER_ERROR],
+        });
+      }
+
+      this.logger.log(`Folder ID obtained: ${folderId}`);
+
       user.drive_connected = true;
       user.drive_access_token = accessToken;
       user.drive_refresh_token = refreshToken;
+      user.drive_root_folder_id = folderId;
 
       const updatedUser = await this.userRepository.save(user);
-      this.logger.log(`Google Drive connected for user ${email}`);
+      this.logger.log(
+        `Google Drive connected for user ${email} with folder ${folderId}`,
+      );
+
+      // Double-check the folder exists
+      const verifyFolder = await this.findSiestaiTravelFolder(accessToken);
+      if (verifyFolder !== folderId) {
+        this.logger.warn(
+          `Warning: Folder ID mismatch. Stored: ${folderId}, Found: ${verifyFolder}`,
+        );
+      }
+
       return updatedUser;
     } catch (error) {
       if (error instanceof AppError) {
+        this.logger.error(
+          `Failed to connect Google Drive for ${email}: ${error.message}`,
+        );
         throw error;
       }
       this.logger.error(`Failed to connect Google Drive for ${email}:`, error);
@@ -168,6 +421,7 @@ export class UserService {
       user.drive_connected = false;
       user.drive_access_token = null;
       user.drive_refresh_token = null;
+      user.drive_root_folder_id = null;
 
       const updatedUser = await this.userRepository.save(user);
       this.logger.log(`Google Drive disconnected for user ${email}`);

@@ -30,6 +30,9 @@ export class DocumentEntity {
   @JoinColumn({ name: 'travel_id', referencedColumnName: 'id' })
   travel: TravelEntity;
 
+  @Column({ nullable: true })
+  drive_folder_id?: string;
+
   @Column()
   file_id: string;
 
