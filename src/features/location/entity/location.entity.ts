@@ -7,7 +7,6 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import {
-  ConnectionBy,
   IConnection,
   ICoordinates,
   LocationKind,
@@ -16,14 +15,15 @@ import {
 import { Money } from 'src/common/money';
 
 @Entity('location')
-@Index(['IDX_UserId_TravelId', 'user_id', 'travel_id'])
-@Index(['IDX_UserId_TravelId_Kind', 'user_id', 'travel_id', 'kind'])
-@Index(['IDX_UserId_TravelId_Type', 'user_id', 'travel_id', 'type'])
+@Index('IDX_Location_UserId_TravelId', ['user_id', 'travel_id'])
+@Index('IDX_Location_UserId_TravelId_Kind', ['user_id', 'travel_id', 'kind'])
+@Index('IDX_Location_UserId_TravelId_Type', ['user_id', 'travel_id', 'type'])
 export class LocationEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column()
+  @Index()
   user_id: string;
 
   @Column()
@@ -38,7 +38,7 @@ export class LocationEntity {
   @Column()
   type: LocationType;
 
-  @Column({ nullable: true })
+  @Column({ type: 'jsonb', nullable: true })
   connection?: IConnection;
 
   @Column({ type: 'jsonb', default: {} })

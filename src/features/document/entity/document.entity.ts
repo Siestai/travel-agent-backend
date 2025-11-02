@@ -12,7 +12,7 @@ import { TravelEntity } from '../../travel/entity/travel.entity';
 import { DocumentType } from '../type/document.type';
 
 @Entity('document')
-@Index(['IDX_UserId_TravelId', 'user_id', 'travel_id'])
+@Index('IDX_Document_UserId_TravelId', ['user_id', 'travel_id'])
 export class DocumentEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -21,10 +21,13 @@ export class DocumentEntity {
   @Index()
   user_id: string;
 
+  @Column()
+  travel_id: string;
+
   @ManyToOne(() => TravelEntity, (travel) => travel.documents, {
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'travel_id' })
+  @JoinColumn({ name: 'travel_id', referencedColumnName: 'id' })
   travel: TravelEntity;
 
   @Column()

@@ -4,7 +4,6 @@ import { Repository } from 'typeorm';
 import { DocumentEntity } from './entity/document.entity';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { DocumentType } from './type/document.type';
-import { TravelEntity } from '../travel/entity/travel.entity';
 
 @Injectable()
 export class DocumentService {
@@ -17,7 +16,7 @@ export class DocumentService {
   async create(createDocumentDto: CreateDocumentDto) {
     const document = this.documentRepository.create({
       user_id: createDocumentDto.user_id,
-      travel: { id: createDocumentDto.travel_id } as Partial<TravelEntity>,
+      travel_id: createDocumentDto.travel_id,
       file_id: createDocumentDto.file_id,
       name: createDocumentDto.name,
       type: createDocumentDto.type as DocumentType,
