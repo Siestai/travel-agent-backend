@@ -3,6 +3,7 @@ import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { ConnectDriveDto } from './dto/connect-drive.dto';
 import { ExchangeDriveTokenDto } from './dto/exchange-drive-token.dto';
+import { DisconnectDriveDto } from './dto/disconnect-drive.dto';
 
 @Controller('user')
 export class UserController {
@@ -38,5 +39,10 @@ export class UserController {
         `${process.env.FRONTEND_URL || 'http://localhost:3000'}/oauth/drive/callback`,
     );
     return tokens;
+  }
+
+  @Post('disconnect-drive')
+  disconnectDrive(@Body() disconnectDriveDto: DisconnectDriveDto) {
+    return this.userService.disconnectDrive(disconnectDriveDto.email);
   }
 }

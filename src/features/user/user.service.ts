@@ -154,4 +154,36 @@ export class UserService {
       });
     }
   }
+
+  async disconnectDrive(email: string) {
+    try {
+      const user = await this.findByEmail(email);
+      if (!user) {
+        throw new AppError({
+          message: 'User not found',
+          ...AppErrorType[AppErrorCodes.NOT_FOUND],
+        });
+      }
+
+      user.drive_connected = false;
+      user.drive_access_token = null;
+      user.drive_refresh_token = null;
+
+      const updatedUser = await this.userRepository.save(user);
+      this.logger.log(`Google Drive disconnected for user ${email}`);
+      return updatedUser;
+    } catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+      this.logger.error(
+        `Failed to disconnect Google Drive for ${email}:`,
+        error,
+      );
+      throw new AppError({
+        message: 'Failed to disconnect Google Drive',
+        ...AppErrorType[AppErrorCodes.INTERNAL_SERVER_ERROR],
+      });
+    }
+  }
 }
