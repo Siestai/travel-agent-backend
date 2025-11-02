@@ -9,6 +9,7 @@ import { UserEntity } from './features/user/entity/user.entity';
 import { TravelModule } from './features/travel/travel.module';
 import { DocumentModule } from './features/document/document.module';
 import { DocumentEntity } from './features/document/entity/document.entity';
+import { TravelEntity } from './features/travel/entity/travel.entity';
 
 @Module({
   imports: [
@@ -25,7 +26,7 @@ import { DocumentEntity } from './features/document/entity/document.entity';
         username: configService.get<string>('DATABASE_USER'),
         password: configService.get<string>('DATABASE_PASSWORD'),
         database: configService.get<string>('DATABASE_NAME'),
-        entities: [UserEntity, DocumentEntity],
+        entities: [UserEntity, DocumentEntity, TravelEntity],
         synchronize: false, // Set to false in production, use migrations instead
       }),
       inject: [ConfigService],
