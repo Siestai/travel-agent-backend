@@ -18,10 +18,6 @@ export class CreateDocumentDto {
   name: string;
 
   @IsString()
-  @IsNotEmpty()
-  type: string;
-
-  @IsString()
   @IsOptional()
   url?: string;
 }

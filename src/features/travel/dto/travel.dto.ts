@@ -17,7 +17,6 @@ export class TravelDto {
       dto.documents = entity.documents.map((doc) => ({
         id: doc.id,
         name: doc.name,
-        type: doc.type,
         url: doc.url,
       }));
     }
@@ -36,7 +35,6 @@ export class TravelDto {
   documents?: Array<{
     id: string;
     name: string;
-    type: string;
     url: string | null;
   }>;
 }

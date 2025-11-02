@@ -9,5 +9,6 @@ import { Module } from '@nestjs/common';
   controllers: [TravelController],
   providers: [TravelService],
   imports: [TypeOrmModule.forFeature([TravelEntity]), UserModule],
+  exports: [TravelService],
 })
 export class TravelModule {}
