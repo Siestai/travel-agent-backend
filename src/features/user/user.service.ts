@@ -61,6 +61,21 @@ export class UserService {
     }
   }
 
+  async findById(id: string) {
+    try {
+      const foundUser = await this.userRepository.findOne({ where: { id } });
+
+      if (!foundUser) return null;
+
+      return foundUser;
+    } catch (error) {
+      throw new AppError({
+        message: 'Failed to find user by id',
+        ...AppErrorType[AppErrorCodes.INTERNAL_SERVER_ERROR],
+      });
+    }
+  }
+
   /**
    * Searches for "Siestai Travel" folder in user's Google Drive
    * Returns folder ID if found, null otherwise
@@ -338,6 +353,95 @@ export class UserService {
       this.logger.error(`Failed to connect Google Drive for ${email}:`, error);
       throw new AppError({
         message: 'Failed to connect Google Drive',
+        ...AppErrorType[AppErrorCodes.INTERNAL_SERVER_ERROR],
+      });
+    }
+  }
+
+  async refreshAccessToken(
+    refreshToken: string,
+  ): Promise<{ access_token: string }> {
+    try {
+      const googleClientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
+      const googleClientSecret = this.configService.get<string>(
+        'GOOGLE_CLIENT_SECRET',
+      );
+
+      if (!googleClientId || !googleClientSecret) {
+        throw new AppError({
+          message: 'Google OAuth credentials not configured',
+          ...AppErrorType[AppErrorCodes.INTERNAL_SERVER_ERROR],
+        });
+      }
+
+      const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          client_id: googleClientId,
+          client_secret: googleClientSecret,
+          refresh_token: refreshToken,
+          grant_type: 'refresh_token',
+        }),
+      });
+
+      if (!tokenResponse.ok) {
+        const errorData = await tokenResponse.json();
+        this.logger.error('Failed to refresh Google Drive token:', errorData);
+        throw new AppError({
+          message: 'Failed to refresh access token',
+          ...AppErrorType[AppErrorCodes.UNAUTHORIZED],
+        });
+      }
+
+      const tokenData = await tokenResponse.json();
+      const { access_token } = tokenData;
+
+      if (!access_token) {
+        throw new AppError({
+          message: 'Access token not received from Google',
+          ...AppErrorType[AppErrorCodes.BAD_REQUEST],
+        });
+      }
+
+      return { access_token };
+    } catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+      this.logger.error('Failed to refresh access token:', error);
+      throw new AppError({
+        message: 'Failed to refresh access token',
+        ...AppErrorType[AppErrorCodes.INTERNAL_SERVER_ERROR],
+      });
+    }
+  }
+
+  async updateAccessToken(userId: string, accessToken: string) {
+    try {
+      const user = await this.findById(userId);
+      if (!user) {
+        throw new AppError({
+          message: 'User not found',
+          ...AppErrorType[AppErrorCodes.NOT_FOUND],
+        });
+      }
+
+      user.drive_access_token = accessToken;
+      await this.userRepository.save(user);
+      this.logger.log(`Access token updated for user ${userId}`);
+    } catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+      this.logger.error(
+        `Failed to update access token for user ${userId}:`,
+        error,
+      );
+      throw new AppError({
+        message: 'Failed to update access token',
         ...AppErrorType[AppErrorCodes.INTERNAL_SERVER_ERROR],
       });
     }
