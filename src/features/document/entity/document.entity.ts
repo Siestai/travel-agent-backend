@@ -9,7 +9,6 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { TravelEntity } from '../../travel/entity/travel.entity';
-import { DocumentType } from '../type/document.type';
 
 @Entity('document')
 @Index('IDX_Document_UserId_TravelId', ['user_id', 'travel_id'])
@@ -24,6 +23,9 @@ export class DocumentEntity {
   @Column()
   travel_id: string;
 
+  @Column()
+  name: string;
+
   @ManyToOne(() => TravelEntity, (travel) => travel.documents, {
     onDelete: 'CASCADE',
   })
@@ -36,14 +38,8 @@ export class DocumentEntity {
   @Column()
   file_id: string;
 
-  @Column()
-  name: string;
-
-  @Column()
-  type: DocumentType;
-
   @Column({ nullable: true })
-  url: string;
+  url?: string;
 
   @CreateDateColumn()
   created: Date;
