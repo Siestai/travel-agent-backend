@@ -25,4 +25,3 @@ export class DocumentDto {
   created: Date;
   updated: Date;
 }
-
