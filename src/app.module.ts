@@ -10,6 +10,7 @@ import { TravelModule } from './features/travel/travel.module';
 import { DocumentModule } from './features/document/document.module';
 import { DocumentEntity } from './features/document/entity/document.entity';
 import { TravelEntity } from './features/travel/entity/travel.entity';
+import { ParserModule } from './agents/parser/parser.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { TravelEntity } from './features/travel/entity/travel.entity';
     AuthModule,
     TravelModule,
     DocumentModule,
+    ParserModule,
   ],
   controllers: [AppController],
   providers: [AppService],
