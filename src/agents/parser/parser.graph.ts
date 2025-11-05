@@ -1,6 +1,6 @@
 import { ChatOllama } from '@langchain/ollama';
 import { StateGraph, START, END } from '@langchain/langgraph';
-// @ts-ignore - TypeScript can't resolve the export path but it works at runtime
+// @ts-expect-error - TypeScript can't resolve the export path but it works at runtime
 import { HumanMessage } from '@langchain/core/messages';
 import { ParserStateSchema, ParserState } from './parser.types';
 import { Logger } from '@nestjs/common';
@@ -63,6 +63,7 @@ async function processFileNode(
 
 /**
  * Build and compile the LangGraph
+ * The graph streams LLM tokens automatically when using astream() with stream_mode="messages"
  */
 export function createParserGraph() {
   const graph = new StateGraph(ParserStateSchema)
@@ -71,11 +72,4 @@ export function createParserGraph() {
     .addEdge('processFile', END);
 
   return graph.compile();
-}
-
-/**
- * Get Ollama model instance for direct streaming
- */
-export function getOllamaModel() {
-  return ollamaModel;
 }
