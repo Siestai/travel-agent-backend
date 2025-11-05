@@ -11,6 +11,7 @@ import { DocumentModule } from './features/document/document.module';
 import { DocumentEntity } from './features/document/entity/document.entity';
 import { TravelEntity } from './features/travel/entity/travel.entity';
 import { ParserModule } from './agents/parser/parser.module';
+import { NatsModule } from './utils/nats/nats.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { ParserModule } from './agents/parser/parser.module';
       }),
       inject: [ConfigService],
     }),
+    NatsModule,
     UserModule,
     AuthModule,
     TravelModule,

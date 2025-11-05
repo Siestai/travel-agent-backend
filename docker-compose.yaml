@@ -1,5 +1,16 @@
 version: "3.8"
 services:
+  nats:
+    image: nats
+    command:
+      - "-js"
+    volumes:
+      - .user/.data:/tmp/nats/jetstream
+    restart: unless-stopped
+    ports:
+      - "24222:4222"
+      - "28222:8222"
+      - "26222:6222"
   pgvector:
     image: pgvector/pgvector:pg16
     container_name: pgvector_travel
